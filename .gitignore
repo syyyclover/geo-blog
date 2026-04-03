@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+api/node_modules/
+
+# Build outputs
+dist/
+build/
+*.log
+
+# Environment files (敏感信息)
+.env
+.env.local
+.env.*.local
+frontend/.env
+api/.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker/Podman
+*.pid
+*.lock
+
+# Data directories (数据文件不提交)
+data/
+content/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Podman storage
+.containers/
+.local/

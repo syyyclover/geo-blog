@@ -1,0 +1,21 @@
+FROM uhub.service.ucloud.cn/syyy/node:20-alpine AS builder
+
+WORKDIR /app
+
+COPY frontend/package.json ./
+RUN npm install
+
+COPY frontend/ ./
+RUN npm run build
+
+# --- Production Stage ---
+FROM nginx:alpine
+
+COPY --from=builder /app/dist /usr/share/nginx/html
+COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx/start.sh /start.sh
+RUN chmod +x /start.sh
+
+EXPOSE 80
+
+CMD ["/start.sh"]

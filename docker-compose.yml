@@ -1,0 +1,62 @@
+version: "3.9"
+
+services:
+  # ─────────────────────────────────────────────
+  # Frontend: Nginx serving built React SPA
+  # ─────────────────────────────────────────────
+  geo-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: geo-frontend
+    restart: unless-stopped
+    ports:
+      - "4000:80"
+    depends_on:
+      - geo-api
+    networks:
+      geo-net:
+        aliases:
+          - geo-frontend
+
+  # ─────────────────────────────────────────────
+  # API: Lightweight Node.js backend
+  # ─────────────────────────────────────────────
+  geo-api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: geo-api
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - JWT_SECRET=${JWT_SECRET}
+      - ADMIN_USERNAME=${ADMIN_USERNAME}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - DATA_DIR=/app/data
+      - CONTENT_PATH=/app/content
+      # Cloudflare R2 (optional — enable when configured)
+      # - R2_ACCOUNT_ID=${R2_ACCOUNT_ID}
+      # - R2_ACCESS_KEY=${R2_ACCESS_KEY}
+      # - R2_SECRET_KEY=${R2_SECRET_KEY}
+      # - R2_BUCKET=${R2_BUCKET}
+      # - R2_PUBLIC_URL=${R2_PUBLIC_URL}
+    volumes:
+      - ./data:/app/data               # Persistent locations.json & app-config.json
+      - ./content:/app/content:ro      # Read-only: Quartz notes (symlink to filebro_notes)
+    expose:
+      - "3001"
+    networks:
+      geo-net:
+        aliases:
+          - geo-api
+
+  # ─────────────────────────────────────────────
+  # Quartz Notes: 已有容器，已加入 geo-net 网络
+  # nginx 将 /notes/ 代理至 quartz-notes:8080
+  # ─────────────────────────────────────────────
+
+networks:
+  geo-net:
+    external: true   # 使用已存在的 podman 网络，不重新创建

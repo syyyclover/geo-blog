@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker inspect b73a3bcb7f03 2>/dev/null | python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('Status:', d[0]['State']['Status']\\); print\\('Ports:', d[0]['NetworkSettings']['Ports']\\); print\\('Name:', d[0]['Name']\\)\" 2>/dev/null || echo \"Docker not available or container not found\")"
+    ]
+  }
+}

@@ -1,0 +1,87 @@
+# 🚀 Geo-Blog 全栈重构与容器化部署开发文档
+
+## 📁 项目目录结构说明
+基于现有的项目状态，本次重构遵循以下目录与架构约定：
+* `frontend/`：存放所有的 React + Vite 前端源代码（即目前的参考文件）。
+* `content/`：系统级的软链接（Symlink），直接链接至 Quartz 4 的资源/笔记 Markdown 目录。
+* **架构目标**：前后端分离，前端纯静态化（由 Nginx 托管），动态数据与图片上传由轻量级 API 容器处理，Quartz 4 独立容器化运行，容器ID：b73a3bcb7f03。本项目也采用容器化部署
+
+---
+
+## 模块一：安全与后台管理 (Auth & Admin Dashboard)
+
+### 1. 鉴权机制 (Security & Authentication)
+* **要求：** `/admin` 路由绝不能直接暴露，必须引入登录与验证机制。
+* **开发指令：**
+  * 在前端实现一个 `/login` 页面，包含用户名和密码表单。
+  * 引入 **JWT (JSON Web Token)** 鉴权机制。成功登录后，将 Token 存储在 `localStorage` 或 `HttpOnly Cookie` 中。
+  * 在 React Router 中封装 `<ProtectedRoute>` 组件，如果未检测到有效 Token，自动重定向至 `/login`。
+  * 未登录用户也可正常观看博客，只是不能添加点位和修改数据
+### 2. 精准选点与足迹录入
+* **要求：** 在 `/admin` 管理面板中实现可视化的数据录入。
+* **开发指令：**
+  * 在 `/admin` 页面渲染 Mapbox 地图，并绑定 `click` 事件。
+  * 鼠标点击地图任意位置时，精确提取 `[lng, lat]` 坐标，并在该点弹出“新增足迹”表单。
+  * 表单字段需包含：地点名称、游玩日期、详细描述、以及**多图上传组件**。
+  * 修复前端添加点位时地图定位与输入框内地点不一致的问题，填写框也应具有地点搜索功能，点击填写框时地图要与填写前一样，不能刷新回到地球全景
+
+---
+
+## 模块二：图片存储与加载优化 (Cloudflare R2 & CDN)
+
+### 1. 图片直传与存储 (Cloudflare R2)
+* **要求：** 解决 2-5MB 大图片加载慢及占用本地服务器资源的问题。
+* **开发指令：**
+  * 表单的图片上传组件对接后端 API，由 API 使用 AWS S3 SDK 将图片直传至绑定的 **Cloudflare R2** 存储桶。
+  * 后端仅将 Cloudflare CDN 的最终外链保存到数据库/数据文件中。
+
+### 2. 渐进式加载策略 (Progressive Image Loading)
+* **开发指令：**
+  * 在地图首页的打卡点弹窗（Popup）中，默认渲染带有 Cloudflare Image Resizing 参数的缩略图链接（例如：`https://img.yourdomain.com/photo.jpg?w=400&q=75`），保证地图交互的极度丝滑。
+  * 仅当用户点击缩略图进入“画廊模式/详情页”时，才去请求并渲染原始的高清大图。
+### 3. 补充功能
+Image URL框可输入多个链接，点击标点时展示首张缩略图，再次点击缩略图展示多张原图的原图，展示风格设计和现有设计风格保持一致
+---
+
+## 模块三：组件功能与布局重构 (UI/UX Refactoring)
+
+### 1. Next Destination (动态进度挂件)
+* **要求：** 摒弃静态的百分比数字，改为由日期驱动的动态计算。
+* **开发指令：**
+  * 数据结构重构：保留 `name` 和 `flag`，将原有的 `progress` 和 `date` 替换为 `startDate`（计划开始日）与 `targetDate`（目标出发日）。
+  * 在 `NextDestination.tsx` 中编写 `useEffect` 逻辑，结合 `Date.now()` 实时计算从 `startDate` 到 `targetDate` 的时间流逝百分比。
+  * 数据同样由 `/admin` 页面进行后台修改。
+  * 登录用户后进入admin模式后支持修改Next Destination信息，包括：目的地，开始日期，结束日期，自动根据时间计算百分比
+
+### 2. Notes 页面双栏布局
+* **要求：** 区分“游玩攻略”与“硬核知识库”，优化宽屏展示效果。
+* 游玩攻略 *
+    * 上传方式 *：直接在服务器的固定资源目录中上传md格式文档后，自动解析到网页端，点击查看
+* **开发指令：**
+  * 将 `NotesSection.tsx` 重构为 Desktop 端左右布局（例如 4:6 分配），Mobile 端垂直堆叠响应式。
+  * **左侧卡片（游记攻略）：** 采用毛玻璃背景，读取后端 API 获取最近的旅行攻略列表。
+  * **右侧大卡片（Quartz 4 入口）：** 设计一个具有视觉冲击力的区域（可嵌入 Quartz 站点的 iframe 预览或动态特效），点击整个卡片区域后，直接跳转或打开 `/notes/` 路由。
+
+### 3. 全局毛玻璃视觉统一 (Glassmorphism)
+* **要求：** 统一 About 页面与 Map 页面的视觉语言。
+* **开发指令：**
+  * 移除 `AboutSection.tsx` 的不透明深色背景（`bg-neutral-950`）。
+  * 全局使用环境模糊效果，将 About 卡片样式替换为：`bg-white/10 backdrop-blur-md border border-white/20 shadow-xl`（深色模式对应 `bg-black/40`），同时为文本增加适度的对比度或文本阴影。
+
+---
+
+## 模块四：容器化编排与 Nginx 路由代理 (Docker Architecture)
+
+### 1. Docker Compose 编排
+* **要求：** 编写 `docker-compose.yml`，统一编排前端、API 与 Quartz 服务。
+* **架构规划：**
+  * `geo-frontend` 容器：使用 Nginx 镜像，托管 Vite 构建后的纯静态资源。
+  * `geo-api` 容器：轻量级 Node.js/Bun 容器，处理 `/admin` 鉴权、数据持久化与 R2 上传逻辑。
+  * `quartz-notes` 容器：运行 Quartz 4，通过 Volume 挂载根目录下的 `content` 软链接目录（映射为容器内部的 `/usr/src/app/content`），实现笔记内容的实时更新渲染。
+
+### 2. Nginx 反向代理配置 (nginx.conf)
+* **要求：** 解决同域名下 React SPA 路由与 Quartz 4 静态路由的无缝融合。
+* **开发指令：** 提供一份标准的 `nginx.conf` 核心配置：
+  * `location /`：指向前端 React 的 `index.html`（处理 SPA 前端路由）。
+  * `location /api/`：`proxy_pass` 代理至 `geo-api` 容器的对应端口。
+  * `location ^~ /notes/`：`proxy_pass` 代理至局域网内的 `quartz-notes` 容器端口，使得访问 `yourdomain.com/notes/` 完美展示 Quartz 博客。

@@ -1,0 +1,7 @@
+{
+  "name": "Geo-Blog",
+  "description": "A modern personal homepage combining a geographic footprint photo album with a geek knowledge base.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

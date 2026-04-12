@@ -30,8 +30,10 @@ Thumbs.db
 *.lock
 
 # Data directories (数据文件不提交)
-data/
-content/
+data/*
+!data/.gitkeep
+content/*
+!content/.gitkeep
 
 # Temporary files
 tmp/

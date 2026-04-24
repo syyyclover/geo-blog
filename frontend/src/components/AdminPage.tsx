@@ -23,15 +23,23 @@ type PanelMode = "none" | "add" | "list" | "edit";
 /**
  * Cloudflare Image Resizing 转换工具
  */
+//function cfThumb(originalUrl: string, width = 200, quality = 75): string {
+//  if (!originalUrl) return '';
+  // 开发环境直接返回原图
+//  if (import.meta.env.DEV) return originalUrl;
+  
+//  const options = `width=${width},quality=${quality},format=auto`;
+//  return `/cdn-cgi/image/${options}/${originalUrl}`;
+//}
 function cfThumb(originalUrl: string, width = 200, quality = 75): string {
   if (!originalUrl) return '';
-  // 开发环境直接返回原图
   if (import.meta.env.DEV) return originalUrl;
-  
+  if (originalUrl.startsWith('/') && !originalUrl.startsWith('//')) {
+    return originalUrl;
+  }
   const options = `width=${width},quality=${quality},format=auto`;
   return `/cdn-cgi/image/${options}/${originalUrl}`;
 }
-
 export function AdminPage() {
   const mapRef = useRef<MapRef>(null);
   const [selectedCoords, setSelectedCoords] = useState<{ lng: number; lat: number } | null>(null);

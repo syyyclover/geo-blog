@@ -34,21 +34,17 @@ export function NextDestination() {
   const isArrived = daysRemaining !== null && daysRemaining <= 0;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="fixed top-20 right-3 sm:top-24 sm:right-6 z-40"
-    >
+    <div className="w-full">
       {/* Collapsed pill — always visible on mobile when collapsed */}
       <AnimatePresence mode="wait">
         {collapsed ? (
           <motion.button
             key="pill"
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 1, scale: 1 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             onClick={() => setCollapsed(false)}
-            className="flex items-center gap-2 px-3 py-2 bg-white/10 backdrop-blur-xl border border-white/20 rounded-full shadow-lg text-white cursor-pointer hover:bg-white/15 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 bg-white/10 backdrop-blur-xl border border-white/20 rounded-full shadow-lg text-white cursor-pointer hover:bg-white/15 transition-colors ml-auto"
           >
             <span className="text-lg leading-none">{data.flag}</span>
             <span className="text-xs font-semibold hidden xs:inline">
@@ -59,10 +55,10 @@ export function NextDestination() {
         ) : (
           <motion.div
             key="card"
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 1, scale: 1 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="w-56 sm:w-64 p-3 sm:p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl text-white"
+            className="w-full p-3 sm:p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl text-white"
             style={{ backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)" }}
           >
             {/* Header */}
@@ -120,6 +116,6 @@ export function NextDestination() {
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 }

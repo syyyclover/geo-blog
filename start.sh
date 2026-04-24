@@ -7,6 +7,22 @@ cd /opt/geo-blog
 
 echo "=== Starting geo-blog services ==="
 
+# Function to check and create network
+ensure_network() {
+    local network_name="geo-net"
+    
+    if podman network exists "$network_name" 2>/dev/null; then
+        echo "✓ Network $network_name already exists, skipping creation"
+    else
+        echo "Creating network $network_name..."
+        podman network create "$network_name"
+        echo "✓ Network $network_name created successfully"
+    fi
+}
+
+# Ensure geo-net exists
+ensure_network
+
 # Stop and remove existing containers
 podman-compose down 2>/dev/null || true
 
